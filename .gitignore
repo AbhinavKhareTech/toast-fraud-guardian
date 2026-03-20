@@ -1,0 +1,43 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# Environment
+.env
+.venv/
+venv/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# ML artifacts
+ml/export/*.onnx
+ml/training/checkpoints/
+*.pt
+*.pth
+
+# Data
+data/*.csv
+data/*.json
+*.db
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Docker
+*.log
+
+# Coverage
+.coverage
+htmlcov/
+coverage.xml
+
+# MyPy
+.mypy_cache/

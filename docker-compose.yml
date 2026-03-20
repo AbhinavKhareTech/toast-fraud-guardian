@@ -1,0 +1,120 @@
+version: "3.9"
+
+services:
+  # --- API Server ---
+  app:
+    build:
+      context: .
+      target: production
+    ports:
+      - "8000:8000"
+    env_file: .env
+    environment:
+      DATABASE_URL: postgresql+asyncpg://fraud_user:fraud_pass@postgres:5432/fraud_guardian
+      REDIS_URL: redis://redis:6379/0
+      CELERY_BROKER_URL: redis://redis:6379/3
+      CELERY_RESULT_BACKEND: redis://redis:6379/4
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - model_data:/app/ml/export
+    restart: unless-stopped
+
+  # --- Celery Worker (Disputes) ---
+  worker-disputes:
+    build:
+      context: .
+      target: production
+    command: celery -A workers.tasks worker -Q disputes -c 4 --loglevel=info
+    env_file: .env
+    environment:
+      DATABASE_URL: postgresql+asyncpg://fraud_user:fraud_pass@postgres:5432/fraud_guardian
+      REDIS_URL: redis://redis:6379/0
+      CELERY_BROKER_URL: redis://redis:6379/3
+      CELERY_RESULT_BACKEND: redis://redis:6379/4
+    depends_on:
+      - app
+      - redis
+      - postgres
+    restart: unless-stopped
+
+  # --- Celery Worker (Submissions) ---
+  worker-submissions:
+    build:
+      context: .
+      target: production
+    command: celery -A workers.tasks worker -Q submissions -c 2 --loglevel=info
+    env_file: .env
+    environment:
+      DATABASE_URL: postgresql+asyncpg://fraud_user:fraud_pass@postgres:5432/fraud_guardian
+      REDIS_URL: redis://redis:6379/0
+      CELERY_BROKER_URL: redis://redis:6379/3
+      CELERY_RESULT_BACKEND: redis://redis:6379/4
+    depends_on:
+      - app
+      - redis
+      - postgres
+    restart: unless-stopped
+
+  # --- Streamlit Dashboard ---
+  dashboard:
+    build:
+      context: .
+      target: production
+    command: streamlit run frontend/dashboard.py --server.port=8501 --server.address=0.0.0.0
+    ports:
+      - "8501:8501"
+    environment:
+      API_BASE_URL: http://app:8000
+    depends_on:
+      - app
+    restart: unless-stopped
+
+  # --- PostgreSQL ---
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: fraud_user
+      POSTGRES_PASSWORD: fraud_pass
+      POSTGRES_DB: fraud_guardian
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U fraud_user -d fraud_guardian"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # --- Redis ---
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redisdata:/data
+    command: redis-server --appendonly yes --maxmemory 512mb --maxmemory-policy allkeys-lru
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  # --- Prometheus ---
+  prometheus:
+    image: prom/prometheus:latest
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./data/prometheus.yml:/etc/prometheus/prometheus.yml
+    depends_on:
+      - app
+
+volumes:
+  pgdata:
+  redisdata:
+  model_data:

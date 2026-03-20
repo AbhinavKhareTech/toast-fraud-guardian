@@ -1,0 +1,73 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: fraud-guardian-worker-disputes
+  namespace: fraud-guardian
+  labels:
+    app: fraud-guardian-worker
+    queue: disputes
+spec:
+  replicas: 4
+  selector:
+    matchLabels:
+      app: fraud-guardian-worker
+      queue: disputes
+  template:
+    metadata:
+      labels:
+        app: fraud-guardian-worker
+        queue: disputes
+    spec:
+      containers:
+        - name: worker
+          image: toast-fraud-guardian:latest
+          command: ["celery", "-A", "workers.tasks", "worker", "-Q", "disputes", "-c", "4", "--loglevel=info"]
+          envFrom:
+            - configMapRef:
+                name: fraud-guardian-config
+            - secretRef:
+                name: fraud-guardian-secrets
+          resources:
+            requests:
+              cpu: 250m
+              memory: 512Mi
+            limits:
+              cpu: 1000m
+              memory: 1Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: fraud-guardian-worker-submissions
+  namespace: fraud-guardian
+  labels:
+    app: fraud-guardian-worker
+    queue: submissions
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: fraud-guardian-worker
+      queue: submissions
+  template:
+    metadata:
+      labels:
+        app: fraud-guardian-worker
+        queue: submissions
+    spec:
+      containers:
+        - name: worker
+          image: toast-fraud-guardian:latest
+          command: ["celery", "-A", "workers.tasks", "worker", "-Q", "submissions", "-c", "2", "--loglevel=info"]
+          envFrom:
+            - configMapRef:
+                name: fraud-guardian-config
+            - secretRef:
+                name: fraud-guardian-secrets
+          resources:
+            requests:
+              cpu: 125m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
