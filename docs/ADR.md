@@ -1,4 +1,4 @@
-# Architecture Decision Records
+# Architecture Decision Records at Scale
 
 ## ADR-001: Sequence-Based Fraud Scoring with GRU Encoder
 
