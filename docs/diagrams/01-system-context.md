@@ -1,7 +1,11 @@
 ```mermaid
----
-title: System Context - Toast Fraud Guardian
----
+%%{init: {'theme': 'base', 'themeVariables': { 
+  'background': '#fdfdfe',
+  'primaryColor': '#e9ecef',
+  'primaryTextColor': '#212529',
+  'lineColor': '#6c757d'
+}}}%%
+
 graph TB
     subgraph External["External Systems"]
         POS["Restaurant POS<br/>160K+ merchants"]
@@ -39,7 +43,9 @@ graph TB
     STRIPE & SQUARE & TOAST -.->|"resolution webhooks"| API
     API -.->|"dispute result"| VISA
 
-    style TFG fill:#1a1a2e,stroke:#16213e,color:#e94560
-    style External fill:#0f3460,stroke:#16213e,color:#e8e8e8
-    style Data fill:#162447,stroke:#16213e,color:#e8e8e8
-```
+    %% ──────────────────────────────────────────────
+    %% Light, readable styling for both themes
+    %% ──────────────────────────────────────────────
+    style External fill:#f1f3f5,stroke:#adb5bd,color:#212529
+    style TFG      fill:#e3f2fd,stroke:#1976d2,color:#0d47a1,font-weight:bold
+    style Data     fill:#e8f5e9,stroke:#2e7d32,color:#1b5e20
