@@ -1,6 +1,6 @@
 ```mermaid
 ---
-title: End-to-End Risk Evaluation Sequence
+title: End-to-End Risk Evaluation Sequence Diagram
 ---
 sequenceDiagram
     autonumber
